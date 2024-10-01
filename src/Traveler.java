@@ -17,6 +17,9 @@ public class Traveler {
 	public Byte[] moveOptions;
 	public ByteStack moveHistory = new ByteStack("ArrayList");
 	private List<ArrayList<Byte>> MazeMap = importMaze();
+	public Byte[] mazeDimensions;
+	public Byte[] startLoc;
+	public Byte[] endLoc;
 
 	public List<ArrayList<Byte>> importMaze() {
 		List<ArrayList<Byte>> MazeMap = new ArrayList<ArrayList<Byte>>();
@@ -30,16 +33,31 @@ public class Traveler {
 			while ((line = br.readLine()) != null) {
 				// Split the line into values using the defined delimiter (comma)
 				String[] values = line.split(delimiter);
-				System.out.println(line);
-				ArrayList<Byte> MazeRow = new ArrayList<Byte>();
-
-				for (String value : values) {
-					if(regDigit.matcher(value).matches()) {
-						MazeRow.add(Byte.valueOf(value));	
+				if(values.length == 2) {
+					if(this.mazeDimensions == null) {
+						this.mazeDimensions = new Byte[]{Byte.parseByte(values[0]), Byte.parseByte(values[1])};
+					}
+					else if(this.startLoc == null) {
+						this.startLoc = new Byte[]{Byte.parseByte(values[1]), Byte.parseByte(values[0])};
+						this.locY = Byte.parseByte(values[0]);
+						this.locX = Byte.parseByte(values[1]);
+					}
+					else if(this.endLoc == null) {
+						this.endLoc = new Byte[]{Byte.parseByte(values[0]), Byte.parseByte(values[1])};
 					}
 				}
-				if(MazeRow.size() > 0) {
-					MazeMap.add(MazeRow);
+				else {
+					System.out.println(line);
+					ArrayList<Byte> MazeRow = new ArrayList<Byte>();
+	
+					for (String value : values) {
+						if(regDigit.matcher(value).matches()) {
+							MazeRow.add(Byte.valueOf(value));	
+						}
+					}
+					if(MazeRow.size() > 0) {
+						MazeMap.add(MazeRow);
+					}
 				}
 			}
 		}
@@ -146,6 +164,7 @@ public class Traveler {
 			System.out.println("Cannot move left");
 		}
 	}
+	
 	public void moveRight() {
 		try {
 			if(MazeMap.get(locY).get(locX-1) == 1) {
@@ -160,6 +179,7 @@ public class Traveler {
 			System.out.println("Cannot move right");
 		}
 	}
+	
 	public void moveUp() {
 		try {
 			if(MazeMap.get(locY-1).get(locX) == 1) {
@@ -174,6 +194,7 @@ public class Traveler {
 			System.out.println("Cannot move up");
 		}
 	}
+	
 	public void moveDown() {
 		try {
 			if(MazeMap.get(locY+1).get(locX) == 1) {
