@@ -19,24 +19,21 @@ public class Traveler {
 	private List<ArrayList<Byte>> MazeMap = importMaze();
 
 	public List<ArrayList<Byte>> importMaze() {
-		// Define the delimiter used in the CSV file (in this case, a comma)
-		//String delimiter = ",";
 		List<ArrayList<Byte>> MazeMap = new ArrayList<ArrayList<Byte>>();
 		String delimiter = " ";
 
 		// Try-with-resources: Automatically close the BufferedReader after use
 		try (BufferedReader br = new BufferedReader(new FileReader("maze.txt"))) {
-			Pattern regDigit = Pattern.compile("\\d+");
-			String line;  // Variable to hold each line read from the CSV
-			// Read each subsequent line of the CSV (skipping the header)
+			Pattern regDigit = Pattern.compile("\\d+"); // RegEx pattern to verify the item is a digit
+			String line;  // Variable to hold each line read
+			// Read each subsequent line
 			while ((line = br.readLine()) != null) {
 				// Split the line into values using the defined delimiter (comma)
 				String[] values = line.split(delimiter);
 				System.out.println(line);
 				ArrayList<Byte> MazeRow = new ArrayList<Byte>();
-				// Check if the essential fields are not empty before creating the Book object
+
 				for (String value : values) {
-					//System.out.println(value);
 					if(regDigit.matcher(value).matches()) {
 						MazeRow.add(Byte.valueOf(value));	
 					}
@@ -45,7 +42,6 @@ public class Traveler {
 					MazeMap.add(MazeRow);
 				}
 			}
-			//System.out.println(MazeMap);
 		}
 		catch (Exception e){
 			System.out.println(e);
@@ -198,5 +194,4 @@ public class Traveler {
 			System.out.println("num "+String.valueOf(loc));
 		}
 	}
-	//List<ArrayList<Byte>> MazeMap = Driver.importMaze();
 }
