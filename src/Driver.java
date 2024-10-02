@@ -8,8 +8,19 @@ import java.util.stream.Collectors;
 
 public class Driver{	
 	public static void main(String[] args){
-		Traveler walker = new Traveler();
-		walker.checkMove();
-		walker.checkMove();
+		Maze env = new Maze();
+		Traveler walker = new Traveler(env);
+		walker.move();
+		walker.move();
+		walker.move();
+		walker.move();
+		walker.move();
+		walker.move();
+		walker.move();
+		walker.move();
+		walker.move();
+		walker.move();
+		walker.move();
+		walker.move();
   }
 }

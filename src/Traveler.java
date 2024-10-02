@@ -5,156 +5,145 @@ import java.io.FileReader;
 import java.util.ArrayList;
 
 public class Traveler {
-	
-	public Byte icon = -1;
-	public Byte loc = 0;
-	public Byte locY = 3;
-	public Byte locX = 1;
-	public Byte left = 0;
-	public Byte right = 0;
-	public Byte down = 0;
-	public Byte up = 0;
+	Maze env;
+	public Byte[] loc;
+	public Byte icon;
+	public Byte locX;
+	public Byte locY;
 	public Byte[] moveOptions;
+	public Byte[] prevLoc;
 	public ByteStack moveHistory = new ByteStack("ArrayList");
-	private List<ArrayList<Byte>> MazeMap = importMaze();
-	public Byte[] mazeDimensions;
-	public Byte[] startLoc;
-	public Byte[] endLoc;
-
-	public List<ArrayList<Byte>> importMaze() {
-		List<ArrayList<Byte>> MazeMap = new ArrayList<ArrayList<Byte>>();
-		String delimiter = " ";
-
-		// Try-with-resources: Automatically close the BufferedReader after use
-		try (BufferedReader br = new BufferedReader(new FileReader("maze.txt"))) {
-			Pattern regDigit = Pattern.compile("\\d+"); // RegEx pattern to verify the item is a digit
-			String line;  // Variable to hold each line read
-			// Read each subsequent line
-			while ((line = br.readLine()) != null) {
-				// Split the line into values using the defined delimiter (comma)
-				String[] values = line.split(delimiter);
-				if(values.length == 2) {
-					if(this.mazeDimensions == null) {
-						this.mazeDimensions = new Byte[]{Byte.parseByte(values[0]), Byte.parseByte(values[1])};
-					}
-					else if(this.startLoc == null) {
-						this.startLoc = new Byte[]{Byte.parseByte(values[1]), Byte.parseByte(values[0])};
-						this.locY = Byte.parseByte(values[0]);
-						this.locX = Byte.parseByte(values[1]);
-					}
-					else if(this.endLoc == null) {
-						this.endLoc = new Byte[]{Byte.parseByte(values[0]), Byte.parseByte(values[1])};
-					}
-				}
-				else {
-					System.out.println(line);
-					ArrayList<Byte> MazeRow = new ArrayList<Byte>();
 	
-					for (String value : values) {
-						if(regDigit.matcher(value).matches()) {
-							MazeRow.add(Byte.valueOf(value));	
-						}
-					}
-					if(MazeRow.size() > 0) {
-						MazeMap.add(MazeRow);
-					}
-				}
-			}
-		}
-		catch (Exception e){
-			System.out.println(e);
-		}
-		this.moveHistory.Push(new Byte[]{this.locX, this.locY});
-		//System.out.println(moveHistory.size());
-		return MazeMap;
+	public Traveler(Maze env) {
+		this.env = env;
+		this.locX = env.startLoc[0];
+		this.locY = env.startLoc[1];
+		this.loc = new Byte[]{locX, locY};
+		this.icon = -1;
+		this.moveHistory.Push(this.loc);
+		env.Map.get(this.locY).set(this.locX, this.icon);
 	}
 	
-	// check position, updating moveOptions, and then move accordingly
-	public void checkMove() {		
-		//loc = MazeMap.get(locY).get(locX);
+	public void updateLoc() {
+		// clear icon from old loc
+		this.moveHistory.Push(this.loc);
+		this.prevLoc = this.moveHistory.Peek();	
+		env.Map.get(prevLoc[1]).set(prevLoc[0], Byte.valueOf("1"));
+
+		// set icon on new loc
+		this.loc = new Byte[]{locX, locY};
+		env.Map.get(this.locY).set(this.locX, this.icon);
+	}
+	
+	public boolean skipMove() {
+		boolean isLastMove = (
+				prevLoc != null
+				&& prevLoc[0] == locX
+				&& prevLoc[1] == locY
+				);
+		if(isLastMove) {
+			// cancel move, reset position
+			this.locX = loc[0]; this.locY = loc[1];
+		}
+		return isLastMove;
+	}
+	
+	// check position, updating moveOptions
+	public Byte[] checkMove() {
+		Byte left;
+		Byte right;
+		Byte down;
+		Byte up;
+		
 		System.out.println("Checking where to go...");
 		
-		if(locX > 0) {
-			left = MazeMap.get(locY).get(locX-1);	
+		if(this.locX > 0) {
+			left = env.Map.get(this.locY).get(this.locX-1);	
 		}
 		else {
 			left = 0;
 		}
-		if(locX < MazeMap.get(locY).size()-1) {
-			right = MazeMap.get(locY).get(locX+1);
+		if(this.locX < env.Map.get(this.locY).size()-1) {
+			right = env.Map.get(this.locY).get(this.locX+1);
 		}
 		else {
 			right = 0;
 		}
-		if(locY > 0) {
-			up = MazeMap.get(locY-1).get(locX);
+		if(this.locY > 0) {
+			up = env.Map.get(this.locY-1).get(this.locX);
 		}
 		else {
 			up = 0;
 		}
-		if(locY < MazeMap.size()-1 && locX <= MazeMap.get(locY).size()-1) {
-			down = MazeMap.get(locY+1).get(locX);
+		if(this.locY < env.Map.size()-1 && this.locX <= env.Map.get(this.locY).size()-1) {
+			down = env.Map.get(this.locY+1).get(this.locX);
 		}
 		else {
 			down = 0;
 		}
 		
-		System.out.println("Current location is : " + String.valueOf(loc));
+		System.out.println("Current location is X: " + loc[0] + ", Y: " + loc[1]);
 		System.out.println("left is : "+String.valueOf(left));
 		System.out.println("right is : "+String.valueOf(right));
 		System.out.println("up is : "+String.valueOf(up));
 		System.out.println("down is : "+String.valueOf(down));
 		
-		this.moveOptions = new Byte[]{left, right, up, down};
-		this.move();
-		
-		for(ArrayList<Byte> row : MazeMap) {
+		// display the maze
+		for(ArrayList<Byte> row : env.Map) {
 			System.out.println(row);
 		}
+		
+		return (new Byte[]{left, right, up, down});
 		
 	}
 	// move to the first availability found
 	public void move() {
+		
 		boolean canMove = false;
+		
+		moveOptions = checkMove();
+		
 		for(Byte i = 0; i < moveOptions.length; i++) {
 			if(moveOptions[i] == 1) {
+				
 				canMove = true;
 				switch(i) {
 				case 0:
 						moveLeft();
-						return;
+						break;
 				case 1:
 						moveRight();
-						return;
+						break;
 				case 2:
 						moveUp();
-						return;
+						break;
 				case 3:
 						moveDown();
-						return;
+						break;
+				}
+				
+				if(skipMove()) {
+					canMove = false;
+				}
+				else {
+					break;	
 				}
 			}
 		}
+		// if no moves were available
 		if(canMove == false) {
-			// if no moves were available
-			System.out.println(this.moveHistory.size());
-			checkLastMove();
-			Byte[] moveBack = this.moveHistory.Pop();
-			MazeMap.get(moveBack[1]).set(moveBack[0], icon);	
+			undoMove();
 		}
 		else {
-			// mark the location on the array with the traveler icon
-			MazeMap.get(locY).set(locX, icon);
-			// add this movement to the history stack
-			moveHistory.Push(new Byte[]{locX, locY});
+			updateLoc();
 		}
 	}
 	// movement actions
 	public void moveLeft() {
 		try {
-			if(MazeMap.get(locY).get(locX+1) == 1) {
+			if(env.Map.get(locY).get(locX-1) == 1) {
 				System.out.println("Moving left");
-				locX++;
+				this.locX--;
 			}
 			else {
 				throw new Exception();
@@ -167,9 +156,9 @@ public class Traveler {
 	
 	public void moveRight() {
 		try {
-			if(MazeMap.get(locY).get(locX-1) == 1) {
+			if(env.Map.get(locY).get(locX+1) == 1) {
 				System.out.println("Moving right");
-				locX--;				
+				this.locX++;				
 			}
 			else {
 				throw new Exception();
@@ -182,9 +171,9 @@ public class Traveler {
 	
 	public void moveUp() {
 		try {
-			if(MazeMap.get(locY-1).get(locX) == 1) {
+			if(env.Map.get(locY-1).get(locX) == 1) {
 				System.out.println("Moving up");
-				locY--;				
+				this.locY--;				
 			}
 			else {
 				throw new Exception();
@@ -197,9 +186,9 @@ public class Traveler {
 	
 	public void moveDown() {
 		try {
-			if(MazeMap.get(locY+1).get(locX) == 1) {
+			if(env.Map.get(locY+1).get(locX) == 1) {
 				System.out.println("Moving down");
-				locY++;				
+				this.locY++;				
 			}
 			else {
 				throw new Exception();
@@ -210,9 +199,10 @@ public class Traveler {
 		}
 	}
 	
-	public void checkLastMove() {
-		for(Byte loc : moveHistory.Peek()) {
-			System.out.println("num "+String.valueOf(loc));
-		}
+	public void undoMove() {
+		System.out.println(this.moveHistory.size());
+		Byte[] moveBack = this.moveHistory.Pop();
+		locX = moveBack[0]; locY = moveBack[1];
+		updateLoc();
 	}
 }
