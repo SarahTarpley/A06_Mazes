@@ -13,6 +13,8 @@ public class Traveler {
 	public Byte[] moveOptions;
 	public Byte[] prevLoc;
 	public ByteStack moveHistory = new ByteStack("ArrayList");
+	public Character resetDir = ' ';
+	public int stepCount = 0;
 	
 	public Traveler(Maze env) {
 		this.env = env;
@@ -33,6 +35,22 @@ public class Traveler {
 		// set icon on new loc
 		this.loc = new Byte[]{locX, locY};
 		env.Map.get(this.locY).set(this.locX, this.icon);
+		this.stepCount++;
+		resetDir = ' ';
+	}
+	
+	public void undoMove() {
+		System.out.println(this.moveHistory.size());
+		Byte[] moveBack = this.moveHistory.Pop();
+		locX = moveBack[0]; locY = moveBack[1];
+		this.prevLoc = this.moveHistory.Peek();
+		// erase icon from old loc
+		env.Map.get(loc[1]).set(loc[0], Byte.valueOf("1"));
+		// set icon on new loc
+		this.loc = new Byte[]{locX, locY};
+		env.Map.get(this.locY).set(this.locX, this.icon);
+		this.stepCount++;
+		this.resetDir = senseHeading();
 	}
 	
 	public boolean skipMove() {
@@ -82,6 +100,16 @@ public class Traveler {
 			down = 0;
 		}
 		
+		
+		if(resetDir.equals('X')) {
+			System.out.println("Avoiding X...");
+			left = 0; right = 0;
+		}
+		else if(resetDir.equals('Y')) {
+			System.out.println("Avoiding Y...");
+			up = 0; down = 0;
+		}
+		
 		System.out.println("Current location is X: " + loc[0] + ", Y: " + loc[1]);
 		System.out.println("left is : "+String.valueOf(left));
 		System.out.println("right is : "+String.valueOf(right));
@@ -93,12 +121,54 @@ public class Traveler {
 			System.out.println(row);
 		}
 		
-		return (new Byte[]{left, right, up, down});
+		return (new Byte[] {left, down, right, up});
 		
 	}
+	
+	public Character senseHeading() {
+		resetDir = ' ';
+		Byte startAt;
+		// abort if there is no move history
+		if(prevLoc == null) {
+			return resetDir;
+		}
+		
+		System.out.println("Reorienting...");
+		System.out.println(String.valueOf(prevLoc[0]) + " " + String.valueOf(prevLoc[1]));
+		System.out.println(String.valueOf(loc[0]) + " " + String.valueOf(loc[1]));
+		
+		//Testing new method
+//		if(prevLoc[0] < loc[0]) {
+//			startAt = 3;
+//		}
+//		if(prevLoc[0] > loc[0]) {
+//			startAt = 1;
+//		}
+//		if(prevLoc[1] < loc[1]) {
+//			startAt = 2;
+//		}
+//		if(prevLoc[1] > loc[1]) {
+//			startAt = 0;
+//		}
+		
+		// This method doesn't work when the last step was a pivot onto a different axis.
+		if(!prevLoc[0].equals(loc[0])) {
+			System.out.println("Avoid X");
+			resetDir = 'X';
+		}
+		else if(!prevLoc[1].equals(loc[1])){
+			System.out.println("Avoid Y");
+			resetDir = 'Y';
+		}
+		System.out.println("Set to "+String.valueOf(resetDir));
+		
+		return resetDir;
+	}
+	
 	// move to the first availability found
 	public void move() {
-		
+		System.out.println("Move # " + String.valueOf(this.stepCount));
+		System.out.println("Goal : " + String.valueOf(env.endLoc[0]) + ", " + String.valueOf(env.endLoc[1]));
 		boolean canMove = false;
 		
 		moveOptions = checkMove();
@@ -109,17 +179,18 @@ public class Traveler {
 				canMove = true;
 				switch(i) {
 				case 0:
-						moveLeft();
-						break;
+					moveLeft();
+					break;
 				case 1:
-						moveRight();
-						break;
+					moveDown();
+					break;
+
 				case 2:
-						moveUp();
-						break;
+					moveRight();
+					break;
 				case 3:
-						moveDown();
-						break;
+					moveUp();
+					break;
 				}
 				
 				if(skipMove()) {
@@ -136,6 +207,13 @@ public class Traveler {
 		}
 		else {
 			updateLoc();
+		}
+		if((env.endLoc[0] != locX || env.endLoc[1] != locY) && stepCount <= 100) {
+			move();
+		}
+		else if(env.endLoc[0] == locX && env.endLoc[1] == locY){
+			checkMove();
+			System.out.println("COMPLETE!!!");
 		}
 	}
 	// movement actions
@@ -197,12 +275,5 @@ public class Traveler {
 		catch (Exception e){
 			System.out.println("Cannot move down");
 		}
-	}
-	
-	public void undoMove() {
-		System.out.println(this.moveHistory.size());
-		Byte[] moveBack = this.moveHistory.Pop();
-		locX = moveBack[0]; locY = moveBack[1];
-		updateLoc();
 	}
 }

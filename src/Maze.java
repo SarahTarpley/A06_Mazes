@@ -30,7 +30,7 @@ public class Maze {
 						this.startLoc = new Byte[]{Byte.parseByte(values[1]), Byte.parseByte(values[0])};
 					}
 					else if(this.endLoc == null) {
-						this.endLoc = new Byte[]{Byte.parseByte(values[0]), Byte.parseByte(values[1])};
+						this.endLoc = new Byte[]{Byte.parseByte(values[1]), Byte.parseByte(values[0])};
 					}
 				}
 				else {

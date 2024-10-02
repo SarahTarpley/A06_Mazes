@@ -11,16 +11,5 @@ public class Driver{
 		Maze env = new Maze();
 		Traveler walker = new Traveler(env);
 		walker.move();
-		walker.move();
-		walker.move();
-		walker.move();
-		walker.move();
-		walker.move();
-		walker.move();
-		walker.move();
-		walker.move();
-		walker.move();
-		walker.move();
-		walker.move();
   }
 }
