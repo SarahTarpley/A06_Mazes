@@ -40,6 +40,8 @@ public class Traveler {
 	}
 	
 	public void undoMove() {
+		Byte undoX = locX;
+		Byte undoY = locY;
 		System.out.println(this.moveHistory.size());
 		Byte[] moveBack = this.moveHistory.Pop();
 		locX = moveBack[0]; locY = moveBack[1];
@@ -50,7 +52,7 @@ public class Traveler {
 		this.loc = new Byte[]{locX, locY};
 		env.Map.get(this.locY).set(this.locX, this.icon);
 		this.stepCount++;
-		this.resetDir = senseHeading();
+		this.resetDir = senseHeading(undoX, undoY);
 	}
 	
 	public boolean skipMove() {
@@ -101,20 +103,28 @@ public class Traveler {
 		}
 		
 		
-		if(resetDir.equals('X')) {
-			System.out.println("Avoiding X...");
-			left = 0; right = 0;
+		if(resetDir.equals('L')) {
+			System.out.println("Avoiding "+resetDir+"...");
+			left = 0;
 		}
-		else if(resetDir.equals('Y')) {
-			System.out.println("Avoiding Y...");
-			up = 0; down = 0;
+		if(resetDir.equals('D')) {
+			System.out.println("Avoiding "+resetDir+"...");
+			down = 0;
+		}
+		if(resetDir.equals('R')) {
+			System.out.println("Avoiding "+resetDir+"...");
+			right = 0;
+		}
+		else if(resetDir.equals('U')) {
+			System.out.println("Avoiding "+resetDir+"...");
+			up = 0;
 		}
 		
 		System.out.println("Current location is X: " + loc[0] + ", Y: " + loc[1]);
 		System.out.println("left is : "+String.valueOf(left));
+		System.out.println("down is : "+String.valueOf(down));
 		System.out.println("right is : "+String.valueOf(right));
 		System.out.println("up is : "+String.valueOf(up));
-		System.out.println("down is : "+String.valueOf(down));
 		
 		// display the maze
 		for(ArrayList<Byte> row : env.Map) {
@@ -125,9 +135,9 @@ public class Traveler {
 		
 	}
 	
-	public Character senseHeading() {
-		resetDir = ' ';
-		Byte startAt;
+	public Character senseHeading(Byte undoX, Byte undoY) {
+		//resetDir = ' ';
+		//Byte startAt;
 		// abort if there is no move history
 		if(prevLoc == null) {
 			return resetDir;
@@ -152,15 +162,28 @@ public class Traveler {
 //		}
 		
 		// This method doesn't work when the last step was a pivot onto a different axis.
-		if(!prevLoc[0].equals(loc[0])) {
-			System.out.println("Avoid X");
-			resetDir = 'X';
+		if(prevLoc[0] < loc[0] && loc[0] < undoX) {
+			resetDir = 'R';
 		}
-		else if(!prevLoc[1].equals(loc[1])){
-			System.out.println("Avoid Y");
-			resetDir = 'Y';
+		if(prevLoc[0] > loc[0] && loc[0] > undoX) {
+			resetDir = 'L';
 		}
-		System.out.println("Set to "+String.valueOf(resetDir));
+		if(prevLoc[1] < loc[1] && loc[1] < undoY) {
+			resetDir = 'D';
+		}
+		if(prevLoc[1] > loc[1] && loc[1] > undoY) {
+			resetDir = 'U';
+		}
+		
+//		if(!prevLoc[0].equals(loc[0])) {
+//			System.out.println("Avoid X");
+//			resetDir = 'X';
+//		}
+//		else if(!prevLoc[1].equals(loc[1])){
+//			System.out.println("Avoid Y");
+//			resetDir = 'Y';
+//		}
+		//System.out.println("Set to "+String.valueOf(resetDir));
 		
 		return resetDir;
 	}
