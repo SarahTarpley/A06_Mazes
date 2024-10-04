@@ -1,11 +1,12 @@
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
 
 public class Traveler {
-	Maze env;
+	public Maze env;
 	public Byte[] loc;
 	public Byte icon;
 	public Byte locX;
@@ -88,18 +89,26 @@ public class Traveler {
 		else {
 			updateLoc();
 		}
-		
+
 		complete = env.endLoc[0] == loc[0] && env.endLoc[1] == loc[1];
 		
 		if(!complete && stepCount <= limitStep) {
+			try {
+				TimeUnit.MILLISECONDS.sleep(500);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			Gui.recordsDTM.fireTableDataChanged();
 			move();
 		}
 		else if(complete){
 			checkMove();
-			System.out.println("COMPLETE!!!");
+			Gui.endResult("This maze has been solved!");
+			//System.out.println("COMPLETE!!!");
 		}
 		else { // went over step limit
-			System.out.println("Maze could not be solved");
+			Gui.endResult("Maze could not be solved");
 		}
 		return complete;
 	}
