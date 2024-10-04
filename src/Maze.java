@@ -3,14 +3,14 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
-
 public class Maze {
+
 	public Byte[] mazeDimensions;
 	public Byte[] startLoc;
 	public Byte[] endLoc;
 	public List<ArrayList<Byte>> Map = importMaze();
 	
-	public List<ArrayList<Byte>> importMaze() {
+	public List<ArrayList<Byte>> importMaze(){
 		List<ArrayList<Byte>> MazeMap = new ArrayList<ArrayList<Byte>>();
 		String delimiter = " ";
 
@@ -47,6 +47,9 @@ public class Maze {
 					}
 				}
 			}
+		}
+		catch (NumberFormatException ne) {
+			System.out.println("Maximum maze dimensions are 127x127");
 		}
 		catch (Exception e){
 			System.out.println(e);
