@@ -1,9 +1,8 @@
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Vector;
 
+// Contains the functionality of a 'Stack' system allowing move history to be undone
 public class ByteStack{
 	String type;
 	public List<Byte[]> struct;
@@ -20,24 +19,25 @@ public class ByteStack{
 		}
 	}
 
+	//Add new item to stack
 	public void Push(Byte[] x) {
 		this.struct.add(x);
 		this.index ++;
 	}
 	
+	//Remove most recent item and display the contents
 	public Byte[] Pop() throws ArrayIndexOutOfBoundsException{
 		if(this.index >= 0) {
 			Byte[] x = this.struct.get(this.index);
 			this.struct.remove(this.index);
 			this.index --;
-			//System.out.println(this.isEmpty);
 			return x;
 		}
 		else {
 			throw new ArrayIndexOutOfBoundsException("There are no more elements to pop in the stack.");
 		}
 	}
-	
+	//Display most recent item
 	public Byte[] Peek() {
 		Byte[] x = this.struct.get(this.index);
 		return x;

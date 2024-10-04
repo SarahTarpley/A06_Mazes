@@ -1,40 +1,29 @@
-import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableModel;
 
 public class Gui extends JFrame{
 	Maze maze;
 	JTable recordDisplay;
+	private JPanel mainPanel;
+	// Static items will be accessed by Traveler to provide updates
 	public static CusTblModel recordsDTM;
 	public static JLabel isCompletable;
-	// JPanels
-	private JPanel mainPanel;
 
 	public Gui(Maze maze) {
-		this.maze = maze;
-		//System.out.println(matrix[0]);
+		this.maze = maze;;
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setTitle("Maze Traveler");
 		setBounds(400, 100, 700, 700);
@@ -52,17 +41,7 @@ public class Gui extends JFrame{
 
 	}
 	
-	public static void endResult(String display) {
-		JDialog end = new JDialog();
-		JLabel result = new JLabel();
-		result.setText(display);
-		end.setBounds(700, 400, 200, 150);
-		end.add(result, BorderLayout.CENTER);
-		result.setHorizontalAlignment(SwingConstants.CENTER);
-		end.setVisible(true);
-		
-	}
-	
+	// Render the maze into blocks of colors rather than digits
 	public class CustomTableCellRenderer extends DefaultTableCellRenderer 
 	{
 		@Override
@@ -71,36 +50,38 @@ public class Gui extends JFrame{
 			JTable table, Object value, boolean isSelected,
 			boolean hasFocus, int row, int column
 			){
+			Component cell = super.getTableCellRendererComponent
+			   (table, value, isSelected, hasFocus, row, column);
 			
-	        Component cell = super.getTableCellRendererComponent
-	           (table, value, isSelected, hasFocus, row, column);
-	        
-	            Byte amount = (Byte) value;
-		    	//cell.setBackground( Color.gray );
-		    	
-	            if( amount == 0 )
-	            {
-	                cell.setBackground( Color.gray );
-	                // You can also customize the Font and Foreground this way
-	                // cell.setForeground();
-	                // cell.setFont();
-	            }
-	            else if( amount.intValue() == 2) {
-	            	cell.setBackground( Color.red );	
-	            }
-	            else if( amount.intValue() == -1) {
-	            	cell.setBackground( Color.yellow );
-	            }
-	            else
-	            {
-	                cell.setBackground( Color.white );
-	            }
+			Byte amount = (Byte) value;
+			
+			// Marks the walls
+			if( amount == 0 )
+			{
+			    cell.setBackground( Color.gray );
+			}
+			// Marks areas that have been tried and failed
+			else if( amount.intValue() == 2) {
+				cell.setBackground( Color.red );	
+			}
+			// Marks current position
+			else if( amount.intValue() == -1) {
+				cell.setBackground( Color.yellow );
+			}
+			// Marks the open spaces
+			else
+			{
+			    cell.setBackground( Color.white );
+			}
+			// Hide cell contents
 	        cell.setForeground(getBackground());
 	        return cell;
 	    }
 	}
 	
+	// Displaying the maze through a custom JTable
 	public class CusTblModel extends AbstractTableModel {
+		// Needed direct access to array so could receive updates
 		public List<ArrayList<Byte>> tableData = maze.Map;
 		
 		public int getRowCount() {
@@ -128,18 +109,18 @@ public class Gui extends JFrame{
 		}
 	}
 	
+	// Create the maze visuals and apply a colored cell renderer
 	public JScrollPane MazeTable(){
-		//Object[][] matrix;
-		// Create main panel with BorderLayout
-		// DefaultTableModel
-		//matrix = maze.Map.stream().map(row -> row.stream().map(Byte::valueOf).toArray()).collect(Collectors.toList()).toArray(new Object[0][0]);
-		Byte[] Columns = {0,1,2,3,4,5,6,7,8,9};
-		recordsDTM = new CusTblModel();
+//		-- DefaultTableModel did not fit needs, since it required re-instantiating the data source --
+//		-- This prevented the table from receiving updates as the maze was being progressed --		
+//		Byte[] Columns = {0,1,2,3,4,5,6,7,8,9};
+//		matrix = maze.Map.stream().map(row -> row.stream().map(Byte::valueOf).toArray()).collect(Collectors.toList()).toArray(new Object[0][0]);
 //		DefaultTableModel recordsDTM = new DefaultTableModel(matrix, Columns) {
 //			public Class<?> getColumnClass(int column){
 //					return Byte.class;
 //			}
 //		};
+		recordsDTM = new CusTblModel();
 		CustomTableCellRenderer renderer = new CustomTableCellRenderer();
 		recordDisplay = new JTable();		
 		try {
@@ -147,15 +128,24 @@ public class Gui extends JFrame{
 			recordDisplay.setModel(recordsDTM);
 			recordDisplay.setDefaultRenderer( Class.forName( "java.lang.Byte" ), renderer);
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		recordDisplay.setDefaultEditor(Object.class, null);
-		//recordDisplay.setAutoCreateRowSorter(true);
 		JScrollPane sp = new JScrollPane(recordDisplay);
 		recordDisplay.add(renderer);
 		sp.enableInputMethods(false);
 
 		return sp;
+	}
+	
+	public static void endResult(String display) {
+		JDialog end = new JDialog();
+		JLabel result = new JLabel();
+		result.setText(display);
+		end.setBounds(700, 400, 300, 150);
+		end.add(result, BorderLayout.CENTER);
+		result.setHorizontalAlignment(SwingConstants.CENTER);
+		end.setVisible(true);
+		
 	}
 }

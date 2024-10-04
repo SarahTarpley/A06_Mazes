@@ -3,6 +3,9 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+// Stores the map and imported coordinates from the maze
+// The program stores the maze coordinates as 'Bytes'
+// It is not expected that the scope will exceed 128x128 sized mazes 
 public class Maze {
 
 	public Byte[] mazeDimensions;
@@ -54,7 +57,6 @@ public class Maze {
 		catch (Exception e){
 			System.out.println(e);
 		}
-		//System.out.println(moveHistory.size());
 		return MazeMap;
 	}
 }

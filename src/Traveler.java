@@ -1,10 +1,7 @@
-import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.util.ArrayList;
 
+//Contains methods for navigating the maze and updating map with progress
 public class Traveler {
 	public Maze env;
 	public Byte[] loc;
@@ -27,7 +24,7 @@ public class Traveler {
 		this.moveHistory.Push(this.loc);
 		env.Map.get(this.locY).set(this.locX, this.icon);
 	}
-	
+	//Update move history, and reset the marker position on map
 	public void updateLoc() {
 		// clear icon from old loc
 		this.moveHistory.Push(this.loc);
@@ -39,9 +36,8 @@ public class Traveler {
 		env.Map.get(this.locY).set(this.locX, this.icon);
 		this.stepCount++;
 	}
-	
+	//When no other options except to move backwards
 	public void undoMove() {
-		//System.out.println(this.moveHistory.size());
 		Byte[] moveBack = this.moveHistory.Pop();
 		locX = moveBack[0]; locY = moveBack[1];
 		this.prevLoc = this.moveHistory.Peek();
@@ -53,6 +49,7 @@ public class Traveler {
 		this.stepCount++;
 	}
 	
+	//Boolean used to check if the prospective move would be retracing steps
 	public boolean isBackwards(Byte[] moveCoord) {
 		boolean isLastMove = (
 				prevLoc != null
@@ -62,10 +59,13 @@ public class Traveler {
 		return isLastMove;
 	}
 	
-	// check position, updating moveOptions
+	// This originally contained logic used to make a decision on the next move
+	// Now it is only used to print progress to the console & can be deprecated
 	public void checkMove() {
 		System.out.println("Checking where to go...");
 		System.out.println("Current location is X: " + loc[0] + ", Y: " + loc[1]);
+		System.out.println("Move # " + String.valueOf(this.stepCount));
+		System.out.println("Goal : " + String.valueOf(env.endLoc[0]) + ", " + String.valueOf(env.endLoc[1]));
 		// display the maze
 		for(ArrayList<Byte> row : env.Map) {
 			System.out.println(row);
@@ -74,12 +74,11 @@ public class Traveler {
 	
 	// move to the first availability found
 	public boolean move() {
-		System.out.println("Move # " + String.valueOf(this.stepCount));
-		System.out.println("Goal : " + String.valueOf(env.endLoc[0]) + ", " + String.valueOf(env.endLoc[1]));
 		boolean canMove = false;
 		boolean complete = false;
 		checkMove();
 
+		// Try each direction and short circuit once it works
 		canMove = moveLeft() || moveDown() || moveRight() || moveUp();
 		
 		// if no moves were available
@@ -90,29 +89,35 @@ public class Traveler {
 			updateLoc();
 		}
 
+		// After location has been updated, check if complete
 		complete = env.endLoc[0] == loc[0] && env.endLoc[1] == loc[1];
 		
+		// Recursively continue moving if not complete
 		if(!complete && stepCount <= limitStep) {
-			try {
+			try { // 0.5 sec delay between moves
 				TimeUnit.MILLISECONDS.sleep(500);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			// Update the table before entering the next recursive loop
 			Gui.recordsDTM.fireTableDataChanged();
 			move();
 		}
-		else if(complete){
+		else if(complete){ // Pop open a dialogue box at end of recursion
 			checkMove();
-			Gui.endResult("This maze has been solved!");
-			//System.out.println("COMPLETE!!!");
+			Gui.endResult("This maze has been solved in " + String.valueOf(stepCount) +" steps!");
 		}
 		else { // went over step limit
-			Gui.endResult("Maze could not be solved");
+			Gui.endResult("Maze could not be solved within the limit of "+String.valueOf(limitStep)+" steps.");
 		}
 		return complete;
 	}
 	
+	// The 4 functions to move in a direction
+	// Each check if next move is allowed and is not backwards
+	// They will update the transient variables locX & locY
+	// Return a boolean if a move was possible
+	// Could be condensed into a single function looping array moveCoord (X+1, X-1, Y+1, Y-1)
 	public boolean moveLeft() {
 		boolean hasMoved = false;
 		Byte[] moveCoord = {(byte) (locX-1), locY};
@@ -120,7 +125,8 @@ public class Traveler {
 		try {
 			if(!isBackwards(moveCoord) && env.Map.get(moveCoord[1]).get(moveCoord[0]) == 1) {
 				System.out.println("Moving left");
-				this.locX--;
+				this.locX = moveCoord[0];
+				this.locY = moveCoord[1];
 				hasMoved = true;
 			}
 			else {
@@ -139,7 +145,8 @@ public class Traveler {
 		try {
 			if(!isBackwards(moveCoord) && env.Map.get(moveCoord[1]).get(moveCoord[0]) == 1) {
 				System.out.println("Moving right");
-				this.locX++;
+				this.locX = moveCoord[0];
+				this.locY = moveCoord[1];
 				hasMoved = true;
 			}
 			else {
@@ -159,7 +166,8 @@ public class Traveler {
 		try {
 			if(!isBackwards(moveCoord) && env.Map.get(moveCoord[1]).get(moveCoord[0]) == 1) {
 				System.out.println("Moving up");
-				this.locY--;
+				this.locX = moveCoord[0];
+				this.locY = moveCoord[1];
 				hasMoved = true;
 			}
 			else {
@@ -178,7 +186,8 @@ public class Traveler {
 		try {
 			if(!isBackwards(moveCoord) && env.Map.get(moveCoord[1]).get(moveCoord[0]) == 1) {
 				System.out.println("Moving down");
-				this.locY++;
+				this.locX = moveCoord[0];
+				this.locY = moveCoord[1];
 				hasMoved = true;
 			}
 			else {
