@@ -1,1 +1,2 @@
-
+This is an application that solves a maze from an array composed of bits and visualizes the progress with Java Swing.
+It will report back if the maze can be solved or not.
